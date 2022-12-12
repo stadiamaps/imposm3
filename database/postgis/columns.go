@@ -74,7 +74,7 @@ func (t *validatedGeometryType) GeneralizeSQL(colSpec *ColumnSpec, spec *General
 		tolerance = fmt.Sprintf("%f", spec.Tolerance)
 	}
 
-        return fmt.Sprintf(`ST_Buffer(ST_SimplifyPreserveTopology("%s", %s), 0)::Geometry as "%s"`,
+        return fmt.Sprintf(`ST_MakeValid(ST_SimplifyPreserveTopology("%s", %s))::Geometry as "%s"`,
 		colSpec.Name, tolerance, colSpec.Name,
 	)
 }
