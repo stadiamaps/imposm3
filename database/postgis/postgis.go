@@ -650,13 +650,16 @@ func New(conf database.Config, m *config.Mapping) (database.DB, error) {
 
 // prepareGeneralizedTableSources checks if all generalized table have an
 // existing source and sets .Source to the original source (works even
-// when source is allready generalized).
+// when source is already generalized).
 func (pg *PostGIS) prepareGeneralizedTableSources() error {
 	for name, table := range pg.GeneralizedTables {
 		if source, ok := pg.Tables[table.SourceName]; ok {
 			table.Source = source
 		} else if source, ok := pg.GeneralizedTables[table.SourceName]; ok {
 			table.SourceGeneralized = source
+		} else if table.SourceName == table.Name {
+			return errors.Errorf("self-referencing source %q for generalized table %q",
+				table.SourceName, name)
 		} else {
 			return errors.Errorf("missing source %q for generalized table %q",
 				table.SourceName, name)

@@ -43,6 +43,7 @@ type GeneralizedTable struct {
 	Name            string
 	SourceTableName string  `yaml:"source"`
 	Tolerance       float64 `yaml:"tolerance"`
+	SQLTolerance       string `yaml:"sql_tolerance"`
 	SQLFilter       string  `yaml:"sql_filter"`
 }
 
