@@ -10,6 +10,8 @@ Configurations/mappings and cache files are not compatible with Imposm 2, but th
 
 The development of Imposm is sponsored by [Omniscale](https://omniscale.com/).
 
+*Imposm is in production use by the authors. It is actively maintained, with a focus on resolving future incompatibilities with dependencies such as PostGIS. However, there is no capacity for end-user support, and no new features will be developed beyond its existing scope.*
+
 
 Features
 --------
@@ -64,27 +66,11 @@ Performance
 * Imposm uses efficient intermediate caches for reduced IO load during ways and relations building
 
 
-An import in diff-mode on a Hetzner PX121-SSD server (Intel Xeon E5-1650 v3 Hexa-Core, 256GB RAM and SSD RAID 1) of a 36GB planet PBF (2017-08-10) with generalized tables and spatial indices, etc. takes around 6:30h. This is for an import that is ready for minutely updates. The non-diff mode is even faster.
+An import in diff-mode on a Hetzner AX102 server (AMD Ryzen 9 7950X3D, 256GB RAM and NVMe storage) of a 78GB planet PBF (2024-01-29) with generalized tables and spatial indices, etc. takes around 7:30h. This is for an import that is ready for minutely updates. The non-diff mode is even faster.
 
-It's recommended that the memory size of the server is roughly twice the size of the PBF extract you are importing. For example: You should have 64GB RAM or more for a current (2017) 36GB planet file, 8GB for a 4GB regional extract, etc.
-Imports without SSDs will take longer.
+It's recommended that the memory size of the server is roughly twice the size of the PBF extract you are importing. For example: You should have 192GB RAM or more for a current (2024) 78GB planet file, 8GB for a 4GB regional extract, etc.
+Imports with spinning disks will take significantly longer and are not recommended.
 
-Current status
---------------
-
-Imposm is used in production but there is no official 3.0 release yet.
-Imposm >=3, successor of Imposm 2, was called "Imposm 3" and binaries were named `imposm3` during development. Since April 2018 the project is only called Imposm to allow semantic versioning beyond version 3.
-The repository will be renamed to github.com/omniscale/imposm in the future.
-
-### Planned features ###
-
-There are a few features we like to see in Imposm:
-
-* Support for other projections than EPSG:3857 or EPSG:4326
-* Custom field/filter functions
-* Official releases with binaries for more platforms
-
-There is no roadmap however, as the implementation of these features largely depends on external funding.
 
 Installation
 ------------
@@ -94,8 +80,8 @@ Installation
 [Binary releases are available at GitHub.](https://github.com/omniscale/imposm3/releases)
 
 These builds are for x86 64bit Linux and require *no* further dependencies. Download, untar and start `imposm`.
-Binaries are compatible with Debian 8, Ubuntu 14.04 and SLES 12 (and newer versions). Older Imposm binaries (<=0.4) also support Debian 6, RHEL 6 and SLES 11.
-Older versions are available at <http://imposm.org/static/rel/>.
+Binaries are compatible with Debian 10 and other distributions from 2022 or
+newer. You can build from source if you need to support older distributions.
 
 ### Source
 
@@ -103,7 +89,7 @@ There are some dependencies:
 
 #### Compiler
 
-You need [Go >=1.10](http://golang.org).
+You need [Go](http://golang.org). 1.17 or higher is recommended.
 
 #### C/C++ libraries
 
@@ -113,22 +99,25 @@ GEOS >=3.2 is recommended, since it became much more robust when handling invali
 
 
 [libleveldb]: https://github.com/google/leveldb/
-[libgeos]: http://trac.osgeo.org/geos/
+[libgeos]: https://libgeos.org/
 
 #### Compile
 
-Create a [Go workspace](http://golang.org/doc/code.html) by creating the `GOPATH` directory for all your Go code, if you don't have one already:
+The quickest way to install Imposm is to call:
 
-    mkdir -p go
-    cd go
-    export GOPATH=`pwd`
+    go install github.com/omniscale/imposm3/cmd/imposm@latest
 
-Get the code and install Imposm:
+This will download, compile and install Imposm to `~/go/bin/imposm`. You can change the location by setting the `GOBIN` environment.
 
-    go get github.com/omniscale/imposm3
-    go install github.com/omniscale/imposm3/cmd/imposm
+The recommended way for installation is:
 
-Done. You should now have an imposm binary in `$GOPATH/bin`.
+    git clone https://github.com/omniscale/imposm3.git
+    cd imposm3
+    make build
+
+`make build` will build Imposm into your local path and it will add version information to your binary.
+
+You can also directly use go to build or install imposm with `go build ./cmd/imposm`. However, this will not set the version information.
 
 Go compiles to static binaries and so Imposm has no runtime dependencies to Go.
 Just copy the `imposm` binary to your server for deployment. The C/C++ libraries listed above are still required though.
@@ -137,9 +126,8 @@ See also `packaging.sh` for instructions on how to build binary packages for Lin
 
 #### LevelDB
 
-For better performance you can either use [HyperLevelDB][libhyperleveldb] as an in-place replacement for libleveldb or you can use LevelDB >1.21. You need to build Imposm with ``go build -tags="ldbpost121"`` or ``LEVELDB_POST_121=1 make build`` to enable optimizations available with LevelDB 1.21 and higher.
+For better performance you should use LevelDB >1.21. You can still build with support for 1.21 with ``go build -tags="ldbpre121"`` or ``LEVELDB_PRE_121=1 make build``.
 
-[libhyperleveldb]: https://github.com/rescrv/HyperLevelDB
 
 Usage
 -----
